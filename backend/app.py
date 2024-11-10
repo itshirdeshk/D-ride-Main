@@ -1,22 +1,24 @@
 from uagents import Agent, Bureau, Context, Model
 import random
 
+
 class OfferMessage(Model):
     price: float
     location: str
     round: int
     status: str
-    user_priority: str  
-    driver_trust_score: float  
-    user_history_score: float 
-    driver_rating: float  
-    vehicle_type: str  
-    weather: str  
-    traffic: str  
-    payment_method: str  
-    distance_km: float  
-    estimated_duration_min: int  
-    competition_factor: float  
+    user_priority: str
+    driver_trust_score: float
+    user_history_score: float
+    driver_rating: float
+    vehicle_type: str
+    weather: str
+    traffic: str
+    payment_method: str
+    distance_km: float
+    estimated_duration_min: int
+    competition_factor: float
+
 
 user_agent = Agent(name="user_agent", seed="user_agent", endpoint=None)
 driver_agent = Agent(name="driver_agent", seed="driver_agent", endpoint=None)
@@ -24,8 +26,8 @@ driver_agent = Agent(name="driver_agent", seed="driver_agent", endpoint=None)
 # User and driver preferences
 user_max_price = 20.0
 user_initial_offer = 15.0
-user_priority = "medium"  
-user_history_score = 0.85  
+user_priority = "medium"
+user_history_score = 0.85
 driver_min_price = 30.0
 driver_trust_score = 0.8
 location_factor = {"Downtown": 1.0, "Suburb": 1.1}
@@ -34,7 +36,8 @@ user_vehicle_preference = "Standard"
 current_weather = "rainy"
 current_traffic = "high"
 current_payment_method = "credit"
-competition_factor = 0.8  
+competition_factor = 0.8
+
 
 @user_agent.on_event("startup")
 async def start_negotiation(ctx: Context):
@@ -42,7 +45,7 @@ async def start_negotiation(ctx: Context):
         price=user_initial_offer,
         location="Noida",
         round=1,
-        status='pending',
+        status="pending",
         user_priority=user_priority,
         driver_trust_score=driver_trust_score,
         user_history_score=user_history_score,
@@ -53,19 +56,24 @@ async def start_negotiation(ctx: Context):
         payment_method=current_payment_method,
         distance_km=5.0,
         estimated_duration_min=15,
-        competition_factor=competition_factor
+        competition_factor=competition_factor,
     )
-    ctx.logger.info(f"[User] Sending initial offer: ${initial_offer.price} at {initial_offer.location}")
+    ctx.logger.info(
+        f"[User] Sending initial offer: ₹{initial_offer.price} at {initial_offer.location}"
+    )
     await ctx.send(driver_agent.address, initial_offer)
+
 
 @user_agent.on_message(model=OfferMessage)
 async def handle_counteroffer(ctx: Context, sender: str, msg: OfferMessage):
-    ctx.logger.info(f"[User] Received counteroffer: ₹{msg.price} at {msg.location} (Round {msg.round})")
+    ctx.logger.info(
+        f"[User] Received counteroffer: ₹{msg.price} at {msg.location} (Round {msg.round})"
+    )
 
-    if msg.status == 'accepted':
-        ctx.logger.info(f"[User] Negotiation completed successfully at ${msg.price}")
+    if msg.status == "accepted":
+        ctx.logger.info(f"[User] Negotiation completed successfully at ₹{msg.price}")
         return
-    elif msg.status == 'rejected':
+    elif msg.status == "rejected":
         ctx.logger.info("[User] Driver rejected offer. Ending negotiation.")
         return
 
@@ -86,7 +94,7 @@ async def handle_counteroffer(ctx: Context, sender: str, msg: OfferMessage):
             price=msg.price,
             location=msg.location,
             round=msg.round,
-            status='accepted',
+            status="accepted",
             user_priority=user_priority,
             driver_trust_score=driver_trust_score,
             user_history_score=user_history_score,
@@ -97,9 +105,9 @@ async def handle_counteroffer(ctx: Context, sender: str, msg: OfferMessage):
             payment_method=msg.payment_method,
             distance_km=msg.distance_km,
             estimated_duration_min=msg.estimated_duration_min,
-            competition_factor=msg.competition_factor
+            competition_factor=msg.competition_factor,
         )
-        ctx.logger.info(f"[User] Accepting offer at ${final_offer.price}")
+        ctx.logger.info(f"[User] Accepting offer at ₹{final_offer.price}")
         await ctx.send(driver_agent.address, final_offer)
     else:
         next_offer_price = min(msg.price - 0.7, acceptable_price)
@@ -109,7 +117,7 @@ async def handle_counteroffer(ctx: Context, sender: str, msg: OfferMessage):
             price=next_offer_price,
             location=msg.location,
             round=msg.round + 1,
-            status='pending',
+            status="pending",
             user_priority=user_priority,
             driver_trust_score=driver_trust_score,
             user_history_score=user_history_score,
@@ -120,20 +128,27 @@ async def handle_counteroffer(ctx: Context, sender: str, msg: OfferMessage):
             payment_method=msg.payment_method,
             distance_km=msg.distance_km,
             estimated_duration_min=msg.estimated_duration_min,
-            competition_factor=msg.competition_factor
+            competition_factor=msg.competition_factor,
         )
-        ctx.logger.info(f"[User] Sending counteroffer: ${next_offer.price}")
+        ctx.logger.info(f"[User] Sending counteroffer: ₹{next_offer.price}")
         await ctx.send(driver_agent.address, next_offer)
+
 
 @driver_agent.on_message(model=OfferMessage)
 async def handle_offer(ctx: Context, sender: str, msg: OfferMessage):
-    ctx.logger.info(f"[Driver] Received offer: ${msg.price} at {msg.location} (Round {msg.round})")
-    
-    if msg.status == 'accepted':
-        ctx.logger.info(f"[Driver] Negotiation completed with accepted offer: ${msg.price}")
+    ctx.logger.info(
+        f"[Driver] Received offer: ₹{msg.price} at {msg.location} (Round {msg.round})"
+    )
+
+    if msg.status == "accepted":
+        ctx.logger.info(
+            f"[Driver] Negotiation completed with accepted offer: ₹{msg.price}"
+        )
         return
-    elif msg.status == 'rejected':
-        ctx.logger.info(f"[Driver] Negotiation ended with rejection at round {msg.round}")
+    elif msg.status == "rejected":
+        ctx.logger.info(
+            f"[Driver] Negotiation ended with rejection at round {msg.round}"
+        )
         return
 
     # Adjust minimum price based on conditions
@@ -154,15 +169,27 @@ async def handle_offer(ctx: Context, sender: str, msg: OfferMessage):
 
     # Negotiate based on adjusted prices
     if msg.price >= adjusted_min_price:
-        ctx.logger.info(f"[Driver] Offer accepted at ${msg.price}")
-        await ctx.send(user_agent.address, OfferMessage(
-            price=msg.price, location=msg.location, round=msg.round, status='accepted',
-            user_priority=user_priority, driver_trust_score=driver_trust_score,
-            user_history_score=user_history_score, driver_rating=msg.driver_rating,
-            vehicle_type=msg.vehicle_type, weather=msg.weather, traffic=msg.traffic,
-            payment_method=msg.payment_method, distance_km=msg.distance_km,
-            estimated_duration_min=msg.estimated_duration_min, competition_factor=msg.competition_factor
-        ))
+        ctx.logger.info(f"[Driver] Offer accepted at ₹{msg.price}")
+        await ctx.send(
+            user_agent.address,
+            OfferMessage(
+                price=msg.price,
+                location=msg.location,
+                round=msg.round,
+                status="accepted",
+                user_priority=user_priority,
+                driver_trust_score=driver_trust_score,
+                user_history_score=user_history_score,
+                driver_rating=msg.driver_rating,
+                vehicle_type=msg.vehicle_type,
+                weather=msg.weather,
+                traffic=msg.traffic,
+                payment_method=msg.payment_method,
+                distance_km=msg.distance_km,
+                estimated_duration_min=msg.estimated_duration_min,
+                competition_factor=msg.competition_factor,
+            ),
+        )
     else:
         if msg.round < max_rounds:
             counter_offer_price = max(msg.price + 1.0, adjusted_min_price)
@@ -170,7 +197,7 @@ async def handle_offer(ctx: Context, sender: str, msg: OfferMessage):
                 price=counter_offer_price,
                 location=msg.location,
                 round=msg.round + 1,
-                status='pending',
+                status="pending",
                 user_priority=user_priority,
                 driver_trust_score=driver_trust_score,
                 user_history_score=user_history_score,
@@ -181,17 +208,19 @@ async def handle_offer(ctx: Context, sender: str, msg: OfferMessage):
                 payment_method=msg.payment_method,
                 distance_km=msg.distance_km,
                 estimated_duration_min=msg.estimated_duration_min,
-                competition_factor=msg.competition_factor
+                competition_factor=msg.competition_factor,
             )
-            ctx.logger.info(f"[Driver] Sending counteroffer: ${counter_offer.price}")
+            ctx.logger.info(f"[Driver] Sending counteroffer: ₹{counter_offer.price}")
             await ctx.send(user_agent.address, counter_offer)
         else:
-            ctx.logger.info("[Driver] Ending negotiation - offer too low after max rounds.")
+            ctx.logger.info(
+                "[Driver] Ending negotiation - offer too low after max rounds."
+            )
             final_message = OfferMessage(
                 price=msg.price,
                 location=msg.location,
                 round=msg.round,
-                status='rejected',
+                status="rejected",
                 user_priority=user_priority,
                 driver_trust_score=driver_trust_score,
                 user_history_score=user_history_score,
@@ -202,9 +231,10 @@ async def handle_offer(ctx: Context, sender: str, msg: OfferMessage):
                 payment_method=msg.payment_method,
                 distance_km=msg.distance_km,
                 estimated_duration_min=msg.estimated_duration_min,
-                competition_factor=msg.competition_factor
+                competition_factor=msg.competition_factor,
             )
             await ctx.send(user_agent.address, final_message)
+
 
 # Initialize bureau
 bureau = Bureau()
