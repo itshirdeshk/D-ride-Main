@@ -6,17 +6,17 @@ class OfferMessage(Model):
     location: str
     round: int
     status: str
-    user_priority: str  # 'high', 'medium', 'low'
-    driver_trust_score: float  # 0.0 to 1.0
-    user_history_score: float  # Based on previous reviews (0.0 to 1.0)
-    driver_rating: float  # Driver's rating (0.0 to 5.0)
-    vehicle_type: str  # 'Standard', 'Luxury', 'SUV'
-    weather: str  # 'clear', 'rainy', 'snowy'
-    traffic: str  # 'low', 'medium', 'high'
-    payment_method: str  # 'cash', 'credit'
-    distance_km: float  # Distance in kilometers
-    estimated_duration_min: int  # Estimated duration in minutes
-    competition_factor: float  # 1.0 (low competition) to 0.7 (high competition)
+    user_priority: str  
+    driver_trust_score: float  
+    user_history_score: float 
+    driver_rating: float  
+    vehicle_type: str  
+    weather: str  
+    traffic: str  
+    payment_method: str  
+    distance_km: float  
+    estimated_duration_min: int  
+    competition_factor: float  
 
 user_agent = Agent(name="user_agent", seed="user_agent", endpoint=None)
 driver_agent = Agent(name="driver_agent", seed="driver_agent", endpoint=None)
@@ -24,9 +24,9 @@ driver_agent = Agent(name="driver_agent", seed="driver_agent", endpoint=None)
 # User and driver preferences
 user_max_price = 20.0
 user_initial_offer = 15.0
-user_priority = "medium"  # Flexibility in urgency
-user_history_score = 0.85  # High user rating
-driver_min_price = 22.0
+user_priority = "medium"  
+user_history_score = 0.85  
+driver_min_price = 30.0
 driver_trust_score = 0.8
 location_factor = {"Downtown": 1.0, "Suburb": 1.1}
 max_rounds = 5
@@ -34,7 +34,7 @@ user_vehicle_preference = "Standard"
 current_weather = "rainy"
 current_traffic = "high"
 current_payment_method = "credit"
-competition_factor = 0.8  # Indicates moderate competition
+competition_factor = 0.8  
 
 @user_agent.on_event("startup")
 async def start_negotiation(ctx: Context):
@@ -207,7 +207,7 @@ async def handle_offer(ctx: Context, sender: str, msg: OfferMessage):
             await ctx.send(user_agent.address, final_message)
 
 # Initialize bureau
-bureau = Bureau(endpoint="http://127.0.0.1:8002", port=8002)
+bureau = Bureau()
 bureau.add(user_agent)
 bureau.add(driver_agent)
 
